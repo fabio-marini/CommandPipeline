@@ -1,4 +1,6 @@
-﻿namespace CommandPipeline.Example
+﻿using Microsoft.Extensions.DependencyInjection;
+
+namespace CommandPipeline.Example
 {
     using System;
     using System.Collections.Generic;
@@ -10,10 +12,8 @@
     using CommandPipeline.Infrastructure.ParametersContext.Implementation;
     using CommandPipeline.Infrastructure.Pipeline;
     using CommandPipeline.Infrastructure.Pipeline.Implementation;
-    using CommandPipeline.Ninject;
-
+    using CommandPipeline.Microsoft.Extensions.DependencyInjection;
     using FluentAssertions;
-
     using Xunit;
 
     public class DownloadPipelineTests
@@ -37,15 +37,23 @@
         [Fact]
         public void ConvertAllLinksToMarkdownDocuments()
         {
-            var container = new NinjectContainer();
+            var provider = new ServiceCollection()
 
-            container.Bind<IWebPageDownloader>().To<WebPageDownloader>();
-            container.Bind<IMarkdownConveter>().To<MarkdownConveter>();
-            container.Bind<IDataContainerService>().To<DataContainerServiceFake>();
+                // command dependencies
+                .AddScoped<IWebPageDownloader, WebPageDownloader>()
+                .AddScoped<IMarkdownConveter, MarkdownConveter>()
+                .AddScoped<IDataContainerService, DataContainerServiceFake>()
+
+                // commands
+                .AddScoped<ExtractHtmlFromUrl>()
+                .AddScoped<ConvertHtmlToMardown>()
+                .AddScoped<UploadToDataContainer>()
+
+                .BuildServiceProvider();
 
             var context = new ParametersContext<ICommand>();
 
-            var pipeline = builder.Create(container, context)
+            var pipeline = builder.Create(new CommandContainer(provider), context)
                 .Register<ExtractHtmlFromUrl>()
                 .Register<ConvertHtmlToMardown>()
                 .Register<UploadToDataContainer>();

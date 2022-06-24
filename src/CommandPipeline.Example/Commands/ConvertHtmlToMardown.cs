@@ -23,9 +23,9 @@
 
         public override void Execute()
         {
-            HtmlDocument htmlDocument = Ensure.That(this.HtmlPage, "HtmlDocument").Is(p => EnsureObjectExtensions.IsNotNull<InArgument<HtmlDocument>>(p));
+            Ensure.That(this.HtmlPage?.Value, "HtmlDocument").IsNotNull();
 
-            var markdownDocument = this.Conveter.ConvertFromHtml(htmlDocument.Content);
+            var markdownDocument = this.Conveter.ConvertFromHtml(this.HtmlPage.Value.Content);
 
             var document = new MarkdownDocument { Content = markdownDocument };
 
